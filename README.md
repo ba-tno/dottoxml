@@ -1,3 +1,8 @@
+## Fork modifications
+- Rewrote all Python 2 command such that they work in Python 3
+- Hardoced input file encoding to UTF-8 (as I don't understand how to rewrite the `unicode` function to Python 3)
+- Changed default arrowheads from `none` to `normal`.
+
 ## Modified version of dottoxml 
 
 Protégé includes the OntoGraf plugin that allows to create a visual graph display from an ontology and to export that display as a `.dot` format file.
