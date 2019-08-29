@@ -22,7 +22,7 @@
 """
 
 import sys
-import locale
+# import locale
 import optparse
 
 import dot
@@ -31,14 +31,14 @@ import dot
 usgmsg = "Usage: dottoxml.py [options] infile.dot outfile.graphml"
 
 def usage():
-    print "dottoxml 1.6, 2014-04-10, Dirk Baechle\n"
-    print usgmsg
-    print "Hint: Try '-h' or '--help' for further infos!"
+    print("dottoxml 1.6, 2014-04-10, Dirk Baechle\n")
+    print(usgmsg)
+    print("Hint: Try '-h' or '--help' for further infos!")
 
 def exportDot(o, nodes, edges, options):
     o.write("graph [\n")
 
-    for k,nod in nodes.iteritems():
+    for k,nod in nodes.items():
         nod.exportDot(o,options)
     for el in edges:
         el.exportDot(o,nodes,options)
@@ -49,7 +49,7 @@ def exportGML(o, nodes, edges, options):
     o.write("  directed 1\n")
     o.write("  IsPlanar 1\n")
 
-    for k,nod in nodes.iteritems():
+    for k,nod in nodes.items():
         nod.exportGML(o,options)
     for el in edges:
         el.exportGML(o,nodes,options)
@@ -104,7 +104,7 @@ def exportGraphml(o, nodes, edges, options):
     graph.setAttribute(u'parse.nodes',u'%d' % len(nodes))
     graph.setAttribute(u'parse.order', u'free')    
     
-    for k,nod in nodes.iteritems():
+    for k,nod in nodes.items():
         nod.exportGraphml(doc, graph, options)
     for el in edges:
         el.exportGraphml(doc, graph, nodes, options)
@@ -117,11 +117,12 @@ def exportGraphml(o, nodes, edges, options):
     data.appendChild(res)    
     root.appendChild(data)
     
-    o.write(doc.toxml(encoding="utf-8"))
-
+    # o.write(doc.toxml(encoding="utf-8"))
+    o.write(doc.toxml(encoding="utf-8").decode('utf-8'))
+	
 def exportGDF(o, nodes, edges, options):
     o.write("nodedef> name\n")
-    for k,nod in nodes.iteritems():
+    for k,nod in nodes.items():
         nod.exportGDF(o, options)
     for el in edges:
         el.exportGDF(o,nodes,options)
@@ -163,7 +164,7 @@ def main():
                       action='store_true', dest='EdgeLabelsAutoComplete', default=False,
                       help='auto-complete edge labels')
     parser.add_option('--ah', '--arrowhead',
-                      action='store', dest='DefaultArrowHead', default='standard', metavar='TYPE',
+                      action='store', dest='DefaultArrowHead', default='normal', metavar='TYPE',
                       help='sets the default appearance of arrow heads for edges (normal|diamond|dot|...) [default : %default]')
     parser.add_option('--at', '--arrowtail',
                       action='store', dest='DefaultArrowTail', default='none', metavar='TYPE',
@@ -181,10 +182,10 @@ def main():
                       action='store', dest='DefaultEdgeTextColor', default='#000000', metavar='COLOR',
                       help='default edge text color for labels [default : "#000000"]')
     parser.add_option('--ienc', '--input-encoding',
-                      action='store', dest='InputEncoding', default='', metavar='ENCODING',
+                      action='store', dest='InputEncoding', default='utf-8', metavar='ENCODING',
                       help='override encoding for input file [default : locale setting]')
     parser.add_option('--oenc', '--output-encoding',
-                      action='store', dest='OutputEncoding', default='', metavar='ENCODING',
+                      action='store', dest='OutputEncoding', default='utf-8', metavar='ENCODING',
                       help='override encoding for text output files [default : locale setting]')
 
     options, args = parser.parse_args()
@@ -201,21 +202,22 @@ def main():
     options.DefaultNodeTextColor = dot.colorNameToRgb(options.DefaultNodeTextColor, '#000000')
     options.DefaultEdgeTextColor = dot.colorNameToRgb(options.DefaultEdgeTextColor, '#000000')
     
-    preferredEncoding = locale.getpreferredencoding()
+#    preferredEncoding = locale.getpreferredencoding()
+    preferredEncoding = 'utf-8'
     if options.InputEncoding == "":
         options.InputEncoding = preferredEncoding
     if options.OutputEncoding == "":
         options.OutputEncoding = preferredEncoding
     
     if options.verbose:
-        print "Input file: %s " % infile
-        print "Output file: %s " % outfile
-        print "Output format: %s" % options.format.lower()
-        print "Input encoding: %s" % options.InputEncoding
+        print("Input file: %s " % infile)
+        print("Output file: %s " % outfile)
+        print("Output format: %s" % options.format.lower())
+        print("Input encoding: %s" % options.InputEncoding)
         if options.format.lower() == "graphml":
-            print "Output encoding: utf-8 (fix for Graphml)"
+            print("Output encoding: utf-8 (fix for Graphml)")
         else:
-            print "Output encoding: %s" % options.OutputEncoding
+            print("Output encoding: %s" % options.OutputEncoding)
 
     # Collect nodes and edges
     nodes = {}
@@ -230,14 +232,14 @@ def main():
 
     idx = 0
     while idx < len(content):
-        l = unicode(content[idx], options.InputEncoding)
+        l = str(content[idx])
         if '->' in l:
             # Check for multiline edge
             if '[' in l and ']' not in l:
                 ml = ""
                 while ']' not in ml:
                     idx += 1
-                    ml = unicode(content[idx], options.InputEncoding)
+                    ml = str(content[idx])
                     l = ' '.join([l.rstrip(), ml.lstrip()])
             # Process edge
             e = dot.Edge()
@@ -253,7 +255,7 @@ def main():
                 ml = ""
                 while ']' not in ml:
                     idx += 1
-                    ml = unicode(content[idx], options.InputEncoding)
+                    ml = str(content[idx])
                     l = ' '.join([l.rstrip(), ml.lstrip()])
             # Process node
             n = dot.Node()
@@ -280,18 +282,18 @@ def main():
                 if ienc != "":
                     options.InputEncoding = ienc
                     if options.verbose:
-                        print "Info: Picked up input encoding '%s' from the DOT file." % ienc
+                        print("Info: Picked up input encoding '%s' from the DOT file." % ienc)
         idx += 1
 
     # Add single nodes, if required
     for e in edges:
-        if not nodes.has_key(e.src):
+        if e.src not in nodes:
             n = dot.Node()
             n.label = e.src
             n.id = nid
             nid += 1
             nodes[e.src] = n
-        if not nodes.has_key(e.dest):
+        if e.dest not in nodes:
             n = dot.Node()
             n.label = e.dest
             n.id = nid
@@ -301,17 +303,17 @@ def main():
         nodes[e.dest].referenced = True
 
     if options.verbose:
-        print "\nNodes: %d " % len(nodes)
-        print "Edges: %d " % len(edges)
+        print("\nNodes: %d " % len(nodes))
+        print("Edges: %d " % len(edges))
     
     if options.sweep:
         rnodes = {}
-        for key, n in nodes.iteritems():
+        for key, n in nodes.items():
             if n.referenced:
                 rnodes[key] = n
         nodes = rnodes
         if options.verbose:
-            print "\nNodes after sweep: %d " % len(nodes)
+            print("\nNodes after sweep: %d " % len(nodes))
     
     # Output
     o = open(outfile, 'w')
@@ -327,7 +329,7 @@ def main():
     o.close()
 
     if options.verbose:
-        print "\nDone."
+        print("\nDone.")
 
 if __name__ == '__main__':
     main()

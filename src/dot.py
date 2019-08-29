@@ -33,7 +33,7 @@ def compileAttributes(attribs):
     """ return the list of attributes as a DOT text string """
     atxt = ""
     first = True
-    for key, value in attribs.iteritems():
+    for key, value in attribs.items():
         if not first:
             atxt += ", %s=\"%s\"" % (key, value)
         else:
@@ -100,7 +100,7 @@ def getColorAttribute(attribs, key, defaultcol, conf):
         to RGB format if required
     """
     if conf.Colors:
-        if attribs.has_key(key):
+        if key in attribs:
             return colorNameToRgb(attribs[key], defaultcol)
     return defaultcol
 
@@ -245,7 +245,7 @@ class Node:
         if len(atts):
             self.attribs = parseAttributes(atts)
         # Process sections
-        if self.attribs.has_key("label"):
+        if "label" in self.attribs:
             tlabel = self.attribs["label"]
             if (tlabel != "" and     
                 tlabel.startswith('{') and
@@ -256,7 +256,7 @@ class Node:
     def getLabel(self, conf, multiline=False):
         """ return the label of the node """
         if conf.NodeLabels:
-            if self.attribs.has_key('label'):
+            if 'label' in self.attribs:
                 if len(self.sections) > 0:
                     if multiline:
                         return '\n'.join(self.sections[0])
@@ -272,7 +272,7 @@ class Node:
     def getLabelWidth(self, conf, multiline=False):
         """ return the maximum width label of the node label"""
         if conf.NodeLabels:
-            if self.attribs.has_key('label'):
+            if 'label' in self.attribs:
                 if len(self.sections) > 0:
                     if multiline:
                         # Find maximum label width
@@ -299,7 +299,7 @@ class Node:
     def complementAttributes(self, node):
         """ from node copy all new attributes, that do not exist in self """
         for a in node.attribs:
-            if not self.attribs.has_key(a):
+            if a not in self.attribs:
                 self.attribs[a] = node.attribs[a]
                 
     def exportDot(self, o, conf):
@@ -399,7 +399,7 @@ class Node:
             shape.appendChild(mlabel)
         else:
             shape = doc.createElement(u'y:Shape')
-            shape.setAttribute(u'type',u'ellipse')
+            shape.setAttribute(u'type',u'rectangle')
         snode.appendChild(shape)
         data0.appendChild(snode)
         node.appendChild(data0)
@@ -455,15 +455,15 @@ class Edge:
     def getLabel(self, nodes, conf):
         """ return the label of the edge """
         if conf.EdgeLabels:
-            if self.attribs.has_key('label'):
+            if 'label' in self.attribs:
                 return self.attribs['label']
             else:
                 if conf.EdgeLabelsAutoComplete:
                     srclink = self.src
                     destlink = self.dest
-                    if (nodes[self.src].attribs.has_key('label')):
+                    if ('label' in nodes[self.src].attribs):
                         srclink = nodes[self.src].attribs['label']
-                    if (nodes[self.dest].attribs.has_key('label')):
+                    if ('label' in nodes[self.dest].attribs):
                         destlink = nodes[self.dest].attribs['label']
                     return "%s -> %s" % (srclink, destlink)
                 else:
@@ -474,7 +474,7 @@ class Edge:
     def complementAttributes(self, edge):
         """ from edge copy all new attributes, that do not exist in self """
         for a in edge.attribs:
-            if not self.attribs.has_key(a):
+            if a not in self.attribs:
                 self.attribs[a] = edge.attribs[a]
                 
     def exportDot(self, o, nodes, conf):
@@ -513,23 +513,20 @@ class Edge:
         data2 = doc.createElement(u'data')
         data2.setAttribute(u'key', u'd2')
 
-        pedge = doc.createElement(u'y:BezierEdge')
+        pedge = doc.createElement(u'y:PolyLineEdge')
         line = doc.createElement(u'y:LineStyle')
         color = getColorAttribute(self.attribs, 'color', conf.DefaultEdgeColor, conf)
         line.setAttribute(u'color',u'%s' % color)
         line.setAttribute(u'type', u'line')
-        if self.attribs.has_key('penwidth'):
-            line.setAttribute(u'width', u'%s' % self.attribs['penwidth'])
-        else:
-            line.setAttribute(u'width', u'1.0')
+        line.setAttribute(u'width', u'1.0')
         pedge.appendChild(line)
         arrow = doc.createElement(u'y:Arrows')
         arrow_tail = conf.DefaultArrowTail
         arrow_head = conf.DefaultArrowHead
         if conf.Arrows:
-            if self.attribs.has_key('arrowtail'):
+            if 'arrowtail' in self.attribs:
                 arrow_tail = self.attribs['arrowtail']
-            if self.attribs.has_key('arrowhead'):
+            if 'arrowhead' in self.attribs:
                 arrow_head = self.attribs['arrowhead']
         arrow.setAttribute(u'source',u'%s' % arrow_tail)                
         arrow.setAttribute(u'target',u'%s' % arrow_head)                
@@ -537,8 +534,6 @@ class Edge:
         if conf.EdgeLabels:
             tlabel = self.getLabel(nodes, conf)
             if tlabel != "":
-                if (tlabel.endswith(u' (Domain>Range)')):
-                    tlabel = tlabel[:-15]
                 label = doc.createElement(u'y:EdgeLabel')
                 color = getColorAttribute(self.attribs, 'fontcolor', conf.DefaultEdgeTextColor, conf)
                 label.setAttribute(u'alignment',u'center')
@@ -557,7 +552,7 @@ class Edge:
                 label.appendChild(doc.createTextNode(u'%s' % escapeNewlines(tlabel)))        
                 pedge.appendChild(label)
         bend = doc.createElement(u'y:BendStyle')      
-        bend.setAttribute(u'smoothed', u'true')
+        bend.setAttribute(u'smoothed', u'false')
         pedge.appendChild(bend)
         data2.appendChild(pedge)
         edge.appendChild(data2)
